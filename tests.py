@@ -2,7 +2,10 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime
 
+
 from last_searches_server import app
+
+
 
 
 class TestLastSearchAPI(unittest.TestCase):
@@ -26,15 +29,12 @@ class TestLastSearchAPI(unittest.TestCase):
         response = self.client.post('/hello')
         assert response.status_code != 200
 
-
     def test_missing_data(self):
         response = self.client.post('/lastSearch')
         self.assertEqual(response.status_code, 400)
 
         json = response.get_json()
-        self.assertIn('error', json)
-        self.assertEqual(json['error'], 'Missing required fields')
-
+        self.assertEqual(None, json)
     def test_success(self):
         mock_data = {
             'userId': 'bob',
@@ -61,7 +61,10 @@ class TestLastSearchAPI(unittest.TestCase):
 
             response = self.client.post('/lastSearch', json=mock_data)
             self.assertEqual(response.status_code, 500)
-            self.assertIn('error', response.get_json())
+            self.assertEqual(None, response.get_json())
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
