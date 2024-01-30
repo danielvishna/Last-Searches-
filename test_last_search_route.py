@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime
 
-from last_searches_server import app
+from last_searches_server import app, searches_collection
 
 
 class TestLastSearchRoute(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestLastSearchRoute(unittest.TestCase):
         response = self.client.post('/lastSearch')
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(None, response.get_json())
+        self.assertEqual(response.get_json(), None)
 
     def test_last_search_success(self):
         mock_data = {
@@ -41,6 +41,16 @@ class TestLastSearchRoute(unittest.TestCase):
 
             self.assertEqual(response.status_code, 500)
             self.assertEqual(None, response.get_json())
+
+    def test_last_search_exists_in_db(self):
+        searches_collection.drop()
+        response = self.client.post('http://localhost:8080/lastSearch')
+        assert response.status_code == 400
+
+        data = {'userId': 'bob', 'searchPhrase': 'test movie'}
+        response = self.client.post('http://localhost:8080/lastSearch', json=data)
+        assert response.status_code == 201
+        assert 'test movie' in [s['searchPhrase'] for s in searches_collection.find({'userId': 'bob'})]
 
 
 if __name__ == '__main__':

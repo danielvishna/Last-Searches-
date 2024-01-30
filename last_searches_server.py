@@ -5,6 +5,8 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 client = MongoClient('mongodb://localhost:27017/')
+db = client['last_searches']
+searches_collection = db['searches']
 
 
 # API 1: Hello
@@ -31,13 +33,13 @@ def last_search():
     except:
         return "", 400
     try:
-        client.db.last_searches.insert_one(
+        searches_collection.insert_one(
             {
                 'userId': user_id,
                 'searchPhrase': search_phrase,
                 'timestamp': timestamp
             }
-        )
+        )  # do we need to protect from sql injection?
         return "", 201
     except:
         return "", 500
@@ -62,15 +64,15 @@ def get_last_searches():
         if not user_id:
             raise ValueError("userId must be supplied")
 
-        if not limit:
-            raise ValueError("limit must be supplied")
+        if not limit or not limit.isdigit():
+            raise ValueError("limit must be supplied as integer")
         limit = int(limit)
     except:
         return "", 400
 
     try:
         searches = list(
-            client.db.last_searches.find(
+            searches_collection.find(
                 {
                     'userId': user_id,
                     'timestamp': {'$gt': datetime.utcnow() - timedelta(weeks=2)}
@@ -91,8 +93,8 @@ def get_last_searches():
 def get_most_popular():
     try:
         limit = request.args.get('limit')
-        if not limit:
-            raise ValueError("limit must be supplied")
+        if not limit or not limit.isdigit():
+            raise ValueError("limit must be supplied as integer")
         limit = int(limit)
     except:
         return "", 400
@@ -100,7 +102,7 @@ def get_most_popular():
     start_date = end_date - timedelta(days=7)
 
     try:
-        result = list(client.db.last_searches.aggregate([
+        result = list(searches_collection.aggregate([
             {'$match': {'timestamp': {'$gte': start_date}}},
             {'$group': {'_id': '$searchPhrase', 'hits': {'$sum': 1}}},
             {'$sort': {'hits': -1}},
