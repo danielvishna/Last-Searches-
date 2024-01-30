@@ -12,10 +12,9 @@ class TestLastSearchRoute(unittest.TestCase):
 
     def test_last_search_missing_data(self):
         response = self.client.post('/lastSearch')
-        self.assertEqual(response.status_code, 400)
 
-        json = response.get_json()
-        self.assertEqual(None, json)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(None, response.get_json())
 
     def test_last_search_success(self):
         mock_data = {

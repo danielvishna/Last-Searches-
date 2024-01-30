@@ -31,11 +31,14 @@ def last_search():
     except:
         return "", 400
     try:
-        client.db.last_searches.insert_one({
-            'userId': user_id,
-            'searchPhrase': search_phrase,
-            'timestamp': timestamp})
-        return '', 201
+        client.db.last_searches.insert_one(
+            {
+                'userId': user_id,
+                'searchPhrase': search_phrase,
+                'timestamp': timestamp
+            }
+        )
+        return "", 201
     except:
         return "", 500
 
@@ -66,10 +69,15 @@ def get_last_searches():
         return "", 400
 
     try:
-        searches = list(client.db.last_searches.find({
-            'userId': user_id,
-            'timestamp': {'$gt': datetime.utcnow() - timedelta(weeks=2)}
-        }).sort('timestamp', -1).limit(limit))
+        searches = list(
+            client.db.last_searches.find(
+                {
+                    'userId': user_id,
+                    'timestamp': {'$gt': datetime.utcnow() - timedelta(weeks=2)}
+                }
+            ).sort('timestamp', -1)
+            .limit(limit)
+        )
 
         last_searches = [search['searchPhrase'] for search in searches]
         return jsonify({'lastSearches': last_searches}), 200
@@ -78,6 +86,32 @@ def get_last_searches():
         return '', 500
 
 
+# API 5: Get the most popular search and number of hits for that search
+@app.route('/mostPopular', methods=['GET'])
+def get_most_popular():
+    try:
+        limit = request.args.get('limit')
+        if not limit:
+            raise ValueError("limit must be supplied")
+        limit = int(limit)
+    except:
+        return "", 400
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=7)
+
+    try:
+        result = list(client.db.last_searches.aggregate([
+            {'$match': {'timestamp': {'$gte': start_date}}},
+            {'$group': {'_id': '$searchPhrase', 'hits': {'$sum': 1}}},
+            {'$sort': {'hits': -1}},
+            {'$limit': limit}
+        ]))
+
+        most_searched = [{'searchPhrase': r['_id'], 'hits': r['hits']} for r in result]
+        return jsonify({'mostSearched': most_searched}), 200
+    except Exception as e:
+        print(e)
+        return '', 500
 
 
 if __name__ == "__main__":
