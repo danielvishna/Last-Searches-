@@ -22,6 +22,8 @@ def last_search():
         data = request.get_json(silent=True)
         user_id = data.get('userId')
         search_phrase = data.get('searchPhrase')
+        if len(data) != 2:
+            raise ValueError("only userId and search_phrase must be supplied")
 
         if not user_id:
             raise ValueError("userId must be supplied")
@@ -59,6 +61,8 @@ def health():
 @app.route('/lastSearches', methods=['GET'])
 def get_last_searches():
     try:
+        if len(request.args) != 2:
+            raise ValueError("only userId and limit must be supplied")
         user_id = request.args.get('userId')
         limit = request.args.get('limit')
         if not user_id:
@@ -92,6 +96,8 @@ def get_last_searches():
 @app.route('/mostPopular', methods=['GET'])
 def get_most_popular():
     try:
+        if len(request.args) != 1:
+            raise ValueError("only limit must be supplied")
         limit = request.args.get('limit')
         if not limit or not limit.isdigit():
             raise ValueError("limit must be supplied as integer")
