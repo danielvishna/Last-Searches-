@@ -32,6 +32,7 @@ def last_search():
             raise ValueError("searchPhrase must be supplied")
 
         timestamp = datetime.utcnow()
+        search_phrase = search_phrase.lower()
     except:
         return "", 400
     try:

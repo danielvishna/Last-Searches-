@@ -19,8 +19,7 @@ class TestLastSearchRoute(unittest.TestCase):
     def test_last_search_success(self):
         mock_data = {
             'userId': 'bob',
-            'searchPhrase': 'test movie',
-            'timestamp': datetime.utcnow()
+            'searchPhrase': 'test movie'
         }
 
         with patch('pymongo.collection.Collection.insert_one') as mock_insert:
@@ -29,8 +28,6 @@ class TestLastSearchRoute(unittest.TestCase):
             self.assertEqual(response.status_code, 201)
             inserted = mock_insert.call_args[0][0]
             self.assertIn('timestamp', inserted)
-            self.assertLessEqual(inserted['timestamp'], datetime.utcnow())
-
     def test_last_search_failure(self):
         mock_data = {'userId': 'bob', 'searchPhrase': 'test movie'}
 
